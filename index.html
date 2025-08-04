@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>주식 분석 대시보드</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th, td {
+            padding: 15px 12px;
+            text-align: center;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        th {
+            background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+        }
+
+        tr {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        tr:hover {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .action-buy {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .action-sell {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .trend-positive {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .trend-negative {
+            color: #3498db;
+            font-weight: bold;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: white;
+            margin: 2% auto;
+            padding: 0;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: modalAppear 0.3s ease-out;
+        }
+
+        @keyframes modalAppear {
+            from {
+                opacity: 0;
+                transform: translateY(-50px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 25px 30px;
+            border-radius: 20px 20px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            font-size: 1.8rem;
+            margin: 0;
+        }
+
+        .close {
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .close:hover {
+            transform: scale(1.1);
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .detail-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            border-left: 5px solid #3498db;
+        }
+
+        .detail-section h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .detail-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .detail-item strong {
+            color: #2c3e50;
+        }
+
+        .confidence-high {
+            color: #27ae60;
+            font-weight: bold;
+        }
+
+        .confidence-medium {
+            color: #f39c12;
+            font-weight: bold;
+        }
+
+        .confidence-low {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .reason-text {
+            line-height: 1.6;
+            color: #555;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+            
+            th, td {
+                padding: 10px 8px;
+                font-size: 0.9rem;
+            }
+            
+            .modal-content {
+                width: 95%;
+                margin: 5% auto;
+            }
+            
+            .modal-body {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📈 주식 분석 대시보드</h1>
+            <p>AI 기반 주식 투자 분석 리포트</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="table-container">
+                <table id="stockTable">
+                    <thead>
+                        <tr>
+                            <th>종목명</th>
+                            <th>투자액션</th>
+                            <th>PER</th>
+                            <th>PBR</th>
+                            <th>목표가</th>
+                            <th>목표점수</th>
+                            <th>외국인</th>
+                            <th>기관</th>
+                            <th>개인</th>
+                            <th>EPS</th>
+                            <th>영업이익</th>
+                            <th>순이익</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stockTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 모달 -->
+    <div id="stockModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">종목 상세 정보</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body" id="modalBody">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 전역 변수로 주식 데이터 저장
+        let stockData = null;
+        
+        // 로딩 상태 표시
+        function showLoading() {
+            const tbody = document.getElementById('stockTableBody');
+            tbody.innerHTML = '<tr><td colspan="12" style="text-align: center; padding: 40px; color: #666;">📊 데이터를 불러오는 중...</td></tr>';
+        }
+        
+        // 에러 상태 표시
+        function showError(message) {
+            const tbody = document.getElementById('stockTableBody');
+            tbody.innerHTML = `<tr><td colspan="12" style="text-align: center; padding: 40px; color: #e74c3c;">❌ ${message}</td></tr>`;
+        }
+        
+        // data.json 파일에서 데이터 로드
+        async function loadData() {
+            try {
+                showLoading();
+                
+                const response = await fetch('data.json');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // 데이터 유효성 검사
+                if (!data.stock_data || typeof data.stock_data !== 'object') {
+                    throw new Error('올바르지 않은 데이터 형식입니다.');
+                }
+                
+                stockData = data;
+                renderTable();
+                
+                // 헤더에 데이터 날짜 표시
+                const headerP = document.querySelector('.header p');
+                if (stockData.date) {
+                    headerP.textContent = `AI 기반 주식 투자 분석 리포트 (${stockData.date})`;
+                }
+                
+                console.log('데이터 로드 완료:', stockData);
+                
+            } catch (error) {
+                console.error('데이터 로드 실패:', error);
+                showError(`데이터를 불러올 수 없습니다: ${error.message}`);
+            }
+        }
+
+        // 테이블 렌더링
+        function renderTable() {
+            if (!stockData || !stockData.stock_data) {
+                showError('데이터가 없습니다.');
+                return;
+            }
+
+            const tbody = document.getElementById('stockTableBody');
+            tbody.innerHTML = '';
+
+            Object.keys(stockData.stock_data).forEach(stockId => {
+                const stock = stockData.stock_data[stockId];
+                const row = document.createElement('tr');
+                row.setAttribute('data-stock-id', stockId);
+                
+                const actionClass = stock.action === '매수' ? 'action-buy' : 'action-sell';
+                
+                row.innerHTML = `
+                    <td><strong>${stock.stock_name}</strong></td>
+                    <td><span class="${actionClass}">${stock.action}</span></td>
+                    <td>${stock.naver_stock.per}</td>
+                    <td>${stock.naver_stock.pbr}</td>
+                    <td>${parseInt(stock.naver_stock.take_profit).toLocaleString()}원</td>
+                    <td>${stock.naver_stock.take_profit_score}</td>
+                    <td>${formatTrend(stock.deal_trend.foreigner)}</td>
+                    <td>${formatTrend(stock.deal_trend.organ)}</td>
+                    <td>${formatTrend(stock.deal_trend.individual)}</td>
+                    <td>${formatTrend(stock.deal_trend.eps)}</td>
+                    <td>${formatTrend(stock.deal_trend.operating_profit)}</td>
+                    <td>${formatTrend(stock.deal_trend.net_income)}</td>
+                `;
+                
+                row.addEventListener('click', () => showModal(stockId));
+                tbody.appendChild(row);
+            });
+        }
+
+        // 트렌드 포맷팅
+        function formatTrend(trend) {
+            return trend.split('').map(char => {
+                if (char === '+') {
+                    return '<span class="trend-positive">▲</span>';
+                } else if (char === '-') {
+                    return '<span class="trend-negative">▼</span>';
+                }
+                return char;
+            }).join('');
+        }
+
+        // 모달 표시
+        function showModal(stockId) {
+            if (!stockData || !stockData.stock_data || !stockData.stock_data[stockId]) {
+                alert('해당 종목 데이터를 찾을 수 없습니다.');
+                return;
+            }
+            
+            const stock = stockData.stock_data[stockId];
+            const modal = document.getElementById('stockModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalBody = document.getElementById('modalBody');
+
+            modalTitle.textContent = `${stock.stock_name} 상세 분석`;
+
+            const confidenceClass = stock.confidence_score === '높음' ? 'confidence-high' : 
+                                  stock.confidence_score === '중간' ? 'confidence-medium' : 'confidence-low';
+
+            modalBody.innerHTML = `
+                <div class="detail-section">
+                    <h3>💼 투자 정보</h3>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <strong>투자 액션:</strong> <span class="${stock.action === '매수' ? 'action-buy' : 'action-sell'}">${stock.action}</span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>신뢰도:</strong> <span class="${confidenceClass}">${stock.confidence_score}</span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>진입 구간:</strong> ${stock.entry_zone}원
+                        </div>
+                        <div class="detail-item">
+                            <strong>목표가:</strong> ${stock.take_profit}원
+                        </div>
+                        <div class="detail-item">
+                            <strong>손절가:</strong> ${stock.stop_loss}원
+                        </div>
+                        <div class="detail-item">
+                            <strong>분석일:</strong> ${stock.date}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <h3>📊 재무 지표</h3>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <strong>PER:</strong> ${stock.naver_stock.per}
+                        </div>
+                        <div class="detail-item">
+                            <strong>PBR:</strong> ${stock.naver_stock.pbr}
+                        </div>
+                        <div class="detail-item">
+                            <strong>목표 점수:</strong> ${stock.naver_stock.take_profit_score}/5.0
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <h3>📈 거래 동향 (최근 5일)</h3>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <strong>외국인:</strong> ${formatTrend(stock.deal_trend.foreigner)}
+                        </div>
+                        <div class="detail-item">
+                            <strong>기관:</strong> ${formatTrend(stock.deal_trend.organ)}
+                        </div>
+                        <div class="detail-item">
+                            <strong>개인:</strong> ${formatTrend(stock.deal_trend.individual)}
+                        </div>
+                        <div class="detail-item">
+                            <strong>EPS:</strong> ${formatTrend(stock.deal_trend.eps)}
+                        </div>
+                        <div class="detail-item">
+                            <strong>영업이익:</strong> ${formatTrend(stock.deal_trend.operating_profit)}
+                        </div>
+                        <div class="detail-item">
+                            <strong>순이익:</strong> ${formatTrend(stock.deal_trend.net_income)}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <h3>💡 투자 전략</h3>
+                    <div class="reason-text">${stock.investment_strategy}</div>
+                </div>
+
+                <div class="detail-section">
+                    <h3>📝 분석 요약</h3>
+                    <div class="reason-text">${stock.condensed_summary}</div>
+                </div>
+
+                <div class="detail-section">
+                    <h3>🔍 상세 분석</h3>
+                    <div class="reason-text">${stock.main_content}</div>
+                </div>
+
+                <div class="detail-section">
+                    <h3>📋 투자 판단 근거</h3>
+                    <div class="reason-text">${stock.decision_reason}</div>
+                </div>
+            `;
+
+            modal.style.display = 'block';
+        }
+
+        // DOM 로드 완료 시 실행
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('stockModal');
+            const closeBtn = document.querySelector('.close');
+
+            // 모달 닫기 이벤트
+            closeBtn.addEventListener('click', function() {
+                modal.style.display = 'none';
+            });
+
+            window.addEventListener('click', function(event) {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+
+            // ESC 키로 모달 닫기
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape' && modal.style.display === 'block') {
+                    modal.style.display = 'none';
+                }
+            });
+
+            // 데이터 로드 시작
+            loadData();
+        });
+    </script>
+</body>
+</html>
