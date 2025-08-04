@@ -50,6 +50,32 @@
             padding: 30px;
         }
 
+        /* ----- 추가된 검색 필터 스타일 시작 ----- */
+        .search-container {
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #searchInput {
+            padding: 10px 15px;
+            border-radius: 20px;
+            border: 1px solid #ddd;
+            font-size: 1rem;
+            width: 100%;
+            max-width: 280px;
+            transition: all 0.3s ease;
+        }
+
+        #searchInput:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+        /* ----- 추가된 검색 필터 스타일 끝 ----- */
+
         .table-container {
             overflow-x: auto;
             border-radius: 12px;
@@ -248,6 +274,10 @@
             .main-content {
                 padding: 20px;
             }
+
+            .search-container {
+                justify-content: center;
+            }
             
             th, td {
                 padding: 10px 8px;
@@ -273,6 +303,9 @@
         </div>
         
         <div class="main-content">
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="종목명을 입력하세요...">
+            </div>
             <div class="table-container">
                 <table id="stockTable">
                     <thead>
@@ -298,7 +331,6 @@
         </div>
     </div>
 
-    <!-- 모달 -->
     <div id="stockModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -345,7 +377,7 @@
                 }
                 
                 stockData = data;
-                renderTable();
+                renderTable(); // 필터 없이 전체 데이터로 초기 렌더링
                 
                 // 헤더에 데이터 날짜 표시
                 const headerP = document.querySelector('.header p');
@@ -361,8 +393,8 @@
             }
         }
 
-        // 테이블 렌더링
-        function renderTable() {
+        // 테이블 렌더링 (필터 기능 추가)
+        function renderTable(filterText = '') {
             if (!stockData || !stockData.stock_data) {
                 showError('데이터가 없습니다.');
                 return;
@@ -370,8 +402,21 @@
 
             const tbody = document.getElementById('stockTableBody');
             tbody.innerHTML = '';
+            
+            const normalizedFilter = filterText.trim().toLowerCase();
 
-            Object.keys(stockData.stock_data).forEach(stockId => {
+            // 검색어로 종목명 필터링
+            const filteredStockIds = Object.keys(stockData.stock_data).filter(stockId => {
+                const stockName = stockData.stock_data[stockId].stock_name.toLowerCase();
+                return stockName.includes(normalizedFilter);
+            });
+
+            if (filteredStockIds.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="12" style="text-align: center; padding: 40px; color: #666;">🔍 검색 결과가 없습니다.</td></tr>';
+                return;
+            }
+
+            filteredStockIds.forEach(stockId => {
                 const stock = stockData.stock_data[stockId];
                 const row = document.createElement('tr');
                 row.setAttribute('data-stock-id', stockId);
@@ -425,7 +470,7 @@
             modalTitle.textContent = `${stock.stock_name} 상세 분석`;
 
             const confidenceClass = stock.confidence_score === '높음' ? 'confidence-high' : 
-                                  stock.confidence_score === '중간' ? 'confidence-medium' : 'confidence-low';
+                                      stock.confidence_score === '중간' ? 'confidence-medium' : 'confidence-low';
 
             modalBody.innerHTML = `
                 <div class="detail-section">
@@ -493,22 +538,22 @@
 
                 <div class="detail-section">
                     <h3>💡 투자 전략</h3>
-                    <div class="reason-text">${stock.investment_strategy}</div>
+                    <div class="reason-text">${stock.investment_strategy.replace(/\n/g, '<br>')}</div>
                 </div>
 
                 <div class="detail-section">
                     <h3>📝 분석 요약</h3>
-                    <div class="reason-text">${stock.condensed_summary}</div>
+                    <div class="reason-text">${stock.condensed_summary.replace(/\n/g, '<br>')}</div>
                 </div>
 
                 <div class="detail-section">
                     <h3>🔍 상세 분석</h3>
-                    <div class="reason-text">${stock.main_content}</div>
+                    <div class="reason-text">${stock.main_content.replace(/\n/g, '<br>')}</div>
                 </div>
 
                 <div class="detail-section">
                     <h3>📋 투자 판단 근거</h3>
-                    <div class="reason-text">${stock.decision_reason}</div>
+                    <div class="reason-text">${stock.decision_reason.replace(/\n/g, '<br>')}</div>
                 </div>
             `;
 
@@ -519,6 +564,13 @@
         document.addEventListener('DOMContentLoaded', function() {
             const modal = document.getElementById('stockModal');
             const closeBtn = document.querySelector('.close');
+            const searchInput = document.getElementById('searchInput');
+
+            // ===== 검색 기능 이벤트 리스너 추가 시작 =====
+            searchInput.addEventListener('input', () => {
+                renderTable(searchInput.value);
+            });
+            // ===== 검색 기능 이벤트 리스너 추가 끝 =====
 
             // 모달 닫기 이벤트
             closeBtn.addEventListener('click', function() {
