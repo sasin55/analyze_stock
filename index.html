@@ -311,6 +311,7 @@
                     <thead>
                         <tr>
                             <th>종목명</th>
+                            <th>분석일</th>
                             <th>투자액션</th>
                             <th>PER</th>
                             <th>PBR</th>
@@ -349,13 +350,13 @@
         // 로딩 상태 표시
         function showLoading() {
             const tbody = document.getElementById('stockTableBody');
-            tbody.innerHTML = '<tr><td colspan="12" style="text-align: center; padding: 40px; color: #666;">📊 데이터를 불러오는 중...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="13" style="text-align: center; padding: 40px; color: #666;">📊 데이터를 불러오는 중...</td></tr>';
         }
         
         // 에러 상태 표시
         function showError(message) {
             const tbody = document.getElementById('stockTableBody');
-            tbody.innerHTML = `<tr><td colspan="12" style="text-align: center; padding: 40px; color: #e74c3c;">❌ ${message}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="13" style="text-align: center; padding: 40px; color: #e74c3c;">❌ ${message}</td></tr>`;
         }
         
         // data.json 파일에서 데이터 로드
@@ -412,7 +413,7 @@
             });
 
             if (filteredStockIds.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="12" style="text-align: center; padding: 40px; color: #666;">🔍 검색 결과가 없습니다.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="13" style="text-align: center; padding: 40px; color: #666;">🔍 검색 결과가 없습니다.</td></tr>';
                 return;
             }
 
@@ -425,6 +426,7 @@
                 
                 row.innerHTML = `
                     <td><strong>${stock.stock_name}</strong></td>
+                    <td>${stock.date}</td>
                     <td><span class="${actionClass}">${stock.action}</span></td>
                     <td>${stock.naver_stock.per}</td>
                     <td>${stock.naver_stock.pbr}</td>
@@ -513,6 +515,21 @@
                 </div>
 
                 <div class="detail-section">
+                    <h3>💹 추세 지표</h3>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <strong>EPS:</strong> ${formatTrend(stock.deal_trend.eps)}
+                        </div>
+                        <div class="detail-item">
+                            <strong>영업이익:</strong> ${formatTrend(stock.deal_trend.operating_profit)}
+                        </div>
+                        <div class="detail-item">
+                            <strong>순이익:</strong> ${formatTrend(stock.deal_trend.net_income)}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-section">
                     <h3>📈 거래 동향 (최근 5일)</h3>
                     <div class="detail-grid">
                         <div class="detail-item">
@@ -523,15 +540,6 @@
                         </div>
                         <div class="detail-item">
                             <strong>개인:</strong> ${formatTrend(stock.deal_trend.individual)}
-                        </div>
-                        <div class="detail-item">
-                            <strong>EPS:</strong> ${formatTrend(stock.deal_trend.eps)}
-                        </div>
-                        <div class="detail-item">
-                            <strong>영업이익:</strong> ${formatTrend(stock.deal_trend.operating_profit)}
-                        </div>
-                        <div class="detail-item">
-                            <strong>순이익:</strong> ${formatTrend(stock.deal_trend.net_income)}
                         </div>
                     </div>
                 </div>
