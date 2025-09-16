@@ -266,6 +266,36 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
 
+        .tradingview-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #131722 0%, #1e2329 100%);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(19, 23, 34, 0.3);
+        }
+
+        .tradingview-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(19, 23, 34, 0.4);
+            color: white;
+            text-decoration: none;
+        }
+
+        .tradingview-icon {
+            width: 20px;
+            height: 20px;
+            background: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMTMuMDkgOC4yNkwyMCA5TDEzLjA5IDE1Ljc0TDEyIDIyTDEwLjkxIDE1Ljc0TDQgOUwxMC45MSA4LjI2TDEyIDJaIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4K') no-repeat center;
+            background-size: contain;
+            flex-shrink: 0;
+        }
+
         @media (max-width: 768px) {
             .header h1 {
                 font-size: 2rem;
@@ -457,6 +487,18 @@
             }).join('');
         }
 
+        // 모달 닫기 함수 (스크롤 초기화 포함)
+        function closeModal() {
+            const modal = document.getElementById('stockModal');
+            const modalContent = modal.querySelector('.modal-content');
+            
+            // 모달 스크롤 초기화
+            modalContent.scrollTop = 0;
+            
+            // 모달 숨기기
+            modal.style.display = 'none';
+        }
+
         // 모달 표시
         function showModal(stockId) {
             if (!stockData || !stockData.stock_data || !stockData.stock_data[stockId]) {
@@ -474,7 +516,20 @@
             const confidenceClass = stock.confidence_score === '높음' ? 'confidence-high' : 
                                       stock.confidence_score === '중간' ? 'confidence-medium' : 'confidence-low';
 
-            modalBody.innerHTML = `
+            // TradingView 링크 버튼 생성 (URL이 있는 경우)
+            let tradingViewButton = '';
+            if (stock.url && stock.url.trim() !== '') {
+                tradingViewButton = `
+                    <div style="margin-bottom: 20px; text-align: right;">
+                        <a href="${stock.url}" target="_blank" rel="noopener noreferrer" class="tradingview-link">
+                            <div class="tradingview-icon"></div>
+                            TradingView에서 보기
+                        </a>
+                    </div>
+                `;
+            }
+
+            modalBody.innerHTML = tradingViewButton + `
                 <div class="detail-section">
                     <h3>💼 투자 정보</h3>
                     <div class="detail-grid">
@@ -580,21 +635,19 @@
             });
             // ===== 검색 기능 이벤트 리스너 추가 끝 =====
 
-            // 모달 닫기 이벤트
-            closeBtn.addEventListener('click', function() {
-                modal.style.display = 'none';
-            });
+            // 모달 닫기 이벤트 (closeModal 함수 사용)
+            closeBtn.addEventListener('click', closeModal);
 
             window.addEventListener('click', function(event) {
                 if (event.target === modal) {
-                    modal.style.display = 'none';
+                    closeModal();
                 }
             });
 
-            // ESC 키로 모달 닫기
+            // ESC 키로 모달 닫기 (closeModal 함수 사용)
             document.addEventListener('keydown', function(event) {
                 if (event.key === 'Escape' && modal.style.display === 'block') {
-                    modal.style.display = 'none';
+                    closeModal();
                 }
             });
 
