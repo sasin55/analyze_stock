@@ -518,10 +518,10 @@
 
             // TradingView 링크 버튼 생성 (URL이 있는 경우)
             let tradingViewButton = '';
-            if (stock.url && stock.url.trim() !== '') {
+            if (stock.tradingview_url && stock.tradingview_url.trim() !== '') {
                 tradingViewButton = `
                     <div style="margin-bottom: 20px; text-align: right;">
-                        <a href="${stock.url}" target="_blank" rel="noopener noreferrer" class="tradingview-link">
+                        <a href="${stock.tradingview_url}" target="_blank" rel="noopener noreferrer" class="tradingview-link">
                             <div class="tradingview-icon"></div>
                             TradingView에서 보기
                         </a>
